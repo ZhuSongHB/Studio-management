@@ -1,12 +1,12 @@
 import Vue from "vue";
 // 按需引入
-import { Button, message, Icon, Menu, Layout, Modal, ConfigProvider, Row, Col, Card, Progress } from "ant-design-vue";
+import { Button, message, Icon, Menu, Layout, Modal, ConfigProvider, Row, Col, Card, Progress, Collapse, Select, Badge, Input, Table, Tag, Divider, Popconfirm, DatePicker } from "ant-design-vue";
 
 // github地址 ： https://github.com/vueComponent/ant-design-vue/blob/master/components/index.js
 
 /* v1.1.3+ 自动注册Button下组件，如Button.Group */
 
-const components = [Button, message, Icon, Menu, Layout, Modal, ConfigProvider, Row, Col, Card, Progress];
+const components = [Button, message, Icon, Menu, Layout, Modal, ConfigProvider, Row, Col, Card, Progress, Popconfirm, Collapse, Select, Badge, Input, Table, ConfigProvider, Tag, Divider, DatePicker];
 components.map(item => {
 	Vue.use(item);
 });

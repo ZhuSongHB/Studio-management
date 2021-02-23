@@ -1,0 +1,238 @@
+<template>
+	<div class="collapse">
+		<a-table :columns="columns" :data-source="datas" :pagination="false" rowKey="id" bordered>
+			<!-- slot中的name是指scopedSlots中customRender  slot-scope="text"的text就是数据源里的值赋值给text  -->
+			<!-- 定义头部名称时 slot等于columns中的slots的title的值，然后赋值 -->
+			<span slot="action" slot-scope="text, record, index">
+				<a-button @click="handleClick(text, record, index)" type="primary">查看详情</a-button>
+			</span>
+		</a-table>
+		<div>
+			<a-modal :title="tanDatas.studio_name" :visible="visible" cancelType="primary" width="60%" @cancel="cancelClick" :centered="true">
+				<div class="box">
+					<div>工作室名称：{{ tanDatas.studio_name }}</div>
+					<div>工作室类型：{{ tanDatas.studio_type }}</div>
+					<div>负责人：{{ tanDatas.teacher_name }}</div>
+					<div>负责人电话：{{ tanDatas.phone }}</div>
+					<div>负责人邮箱：{{ tanDatas.email }}</div>
+					<div>注册学期：{{ tanDatas.semester }}</div>
+					<div>
+						工作室简介：
+						<p class="sj">{{ tanDatas.introduce }}</p>
+					</div>
+				</div>
+				<div slot="footer">
+					<a-button @click="handleCancel" :loading="cancelLoading">不同意</a-button>
+					<a-button @click="handleOk" type="primary" :loading="okLoading">同意</a-button>
+				</div>
+				<a-divider>教师名单</a-divider>
+				<a-table :columns="columns2" :data-source="tableDatas" :pagination="false" rowKey="teacher_id" bordered>
+					<!-- slot中的name是指scopedSlots中customRender  slot-scope="text"的text就是数据源里的值赋值给text  -->
+					<!-- 定义头部名称时 slot等于columns中的slots的title的值，然后赋值 -->
+					<span slot="action" slot-scope="text, record, index">
+						<a-button @click="handleClick(text, record, index)" type="primary">查看详情</a-button>
+					</span>
+				</a-table>
+				<a-divider>直接管理单位</a-divider>
+				<a-tag color="green">同意</a-tag>
+				<div>审核人：{{ tanDatas.management_unit_signer }}</div>
+				<div>审核时间：{{ tanDatas.management_unit_feedback_time }}</div>
+				<div>
+					审核单位意见：
+					<p class="sj">{{ tanDatas.management_unit_feedback_content }}</p>
+				</div>
+				<a-divider>监管单位审核</a-divider>
+				<div class="sub_input">
+					<a-input type="text" placeholder="请输入审核人姓名" v-model="examine.signer" />
+				</div>
+				<a-textarea placeholder="请输入审核意见" v-model="examine.content" :rows="5" />
+			</a-modal>
+		</div>
+	</div>
+</template>
+
+<script>
+	const columns = [
+		{
+			title: "记录id",
+			dataIndex: "id",
+			key: "id",
+		},
+		{
+			title: "工作室名称",
+			dataIndex: "studio_name",
+			key: "studio_name",
+		},
+		{
+			title: "负责人姓名",
+			dataIndex: "teacher_name",
+			key: "teacher_name",
+		},
+		{
+			title: "申请时间",
+			key: "apply_time",
+			dataIndex: "apply_time",
+		},
+		{
+			title: "操作",
+			key: "action",
+			scopedSlots: { customRender: "action" },
+		},
+	];
+	const columns2 = [
+		{
+			title: "教师工号",
+			dataIndex: "teacher_id",
+			key: "teacher_id",
+		},
+		{
+			title: "教师姓名",
+			dataIndex: "teacher_name",
+			key: "teacher_name",
+		},
+		{
+			title: "所属部门名称",
+			dataIndex: "department",
+			key: "department",
+		},
+		{
+			title: "人员类别",
+			key: "type",
+			dataIndex: "type",
+		},
+		{
+			title: "职称/职务",
+			key: "duty",
+			dataIndex: "duty",
+		},
+		{
+			title: "专业",
+			key: "major",
+			dataIndex: "major",
+		},
+	];
+	import { teacherGetRsegisterLook } from "../../../../../network/api";
+	export default {
+		props: ["datas"],
+		data() {
+			return {
+				columns,
+				columns2,
+				// 弹框
+				visible: false,
+				// 弹框数据
+				tanDatas: {},
+				// loading
+				cancelLoading: false,
+				okLoading: false,
+				// 弹框里表格的数据
+				tableDatas: [],
+				// 审核信息
+				examine: {
+					signer: "",
+					content: "",
+				},
+			};
+		},
+		methods: {
+			handleClick(text, record, index) {
+				teacherGetRsegisterLook({ record_id: record.id }).then(res => {
+					this.tanDatas = res.data.data;
+					const arr = [];
+					for (const iterator of this.tanDatas.teacher) {
+						arr.push(iterator);
+					}
+					this.tableDatas = arr;
+					this.visible = true;
+				});
+			},
+			// 同意
+			handleOk(e) {
+				if (this.examine.signer == "") {
+					this.$message.warning("请填写审核人！");
+					return;
+				}
+				this.okLoading = true;
+				// record_id	整型	√	记录id
+				// feedback	整型	√	意见，1同意，2拒绝
+				// content	字符串		意见内容
+				// signer	整型	√	审批人
+				const obj = {
+					record_id: this.tanDatas.id,
+					feedback: 1,
+					...this.examine,
+				};
+				reguFeedBack(obj).then(res => {
+					this.$emit("againData");
+					this.visible = false;
+					this.okLoading = false;
+					if (res.data.code == 1) {
+						this.$message.success("操作成功！");
+					} else {
+						this.$message.error("未知错误！");
+					}
+					this.examine = {
+						signer: "",
+						content: "",
+					};
+				});
+			},
+			handleCancel(e) {
+				if (this.examine.signer == "") {
+					this.$message.warning("请填写审核人！");
+					return;
+				}
+				this.cancelLoading = true;
+				// record_id	整型	√	记录id
+				// feedback	整型	√	意见，1同意，2拒绝
+				// content	字符串		意见内容
+				// signer	整型	√	审批人
+				const obj = {
+					record_id: this.tanDatas.id,
+					feedback: 2,
+					...this.examine,
+				};
+				reguFeedBack(obj).then(res => {
+					this.$emit("againData");
+					this.visible = false;
+					this.cancelLoading = false;
+					if (res.data.code == 1) {
+						this.$message.success("操作成功！");
+					} else {
+						this.$message.error("未知错误！");
+					}
+					this.examine = {
+						signer: "",
+						content: "",
+					};
+				});
+			},
+			cancelClick() {
+				// 关闭
+				this.visible = false;
+			},
+		},
+		created() {},
+	};
+</script>
+
+<style lang="less" scoped>
+	.content {
+		.ant-collapse-content-box {
+			background: red;
+		}
+	}
+	.box {
+		font-size: 16px;
+		div {
+			padding-top: 5px;
+		}
+	}
+	.sub_input {
+		width: 200px;
+		margin-bottom: 20px;
+	}
+	.sj {
+		text-indent: 2em;
+	}
+</style>
