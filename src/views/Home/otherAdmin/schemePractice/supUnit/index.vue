@@ -17,6 +17,7 @@
 						工作室工作内容：
 						<p class="sj">{{ tanDatas.job_content }}</p>
 					</div>
+					<a-button type="primary" class="downLoad" v-if="hasFile" @click="download(tanDatas.id)">下载附件</a-button>
 				</div>
 				<div slot="footer">
 					<a-button @click="handleCancel" :loading="cancelLoading">不同意</a-button>
@@ -32,6 +33,7 @@
 				</a-table>
 				<a-divider>直接管理单位</a-divider>
 				<a-tag color="green">同意</a-tag>
+				<div>直接管理单位：{{ tanDatas.management_unit_name }}</div>
 				<div>审核人：{{ tanDatas.management_unit_signer }}</div>
 				<div>审核时间：{{ tanDatas.management_unit_feedback_time }}</div>
 				<div>
@@ -76,7 +78,7 @@
 			scopedSlots: { customRender: "action" },
 		},
 	];
-		const columns2 = [
+	const columns2 = [
 		{
 			title: "承担内容的类型",
 			dataIndex: "type",
@@ -93,7 +95,7 @@
 			key: "student_num",
 		},
 	];
-	import { practiceSchemeGetTable, reguSchemeFeedBackCreditReplace } from "../../../../../network/api";
+	import { practiceSchemeGetTable, reguSchemeFeedBackCreditReplace, assumeThesisCheck } from "../../../../../network/api";
 	export default {
 		props: ["datas"],
 		data() {
@@ -114,10 +116,22 @@
 					signer: "",
 					content: "",
 				},
+				// 是否有附件
+				hasFile: false,
 			};
 		},
 		methods: {
+			download(record_id) {
+				window.open("/api/teacherstudio/download/assume_thesis?record_id=" + record_id);
+			},
 			handleClick(text, record, index) {
+				assumeThesisCheck({ record_id: record.id }).then(res => {
+					if (res.data.data.result) {
+						this.hasFile = true;
+					} else {
+						this.hasFile = false;
+					}
+				});
 				practiceSchemeGetTable({ record_id: record.id }).then(res => {
 					this.tanDatas = res.data.data;
 					const arr = [];
@@ -213,6 +227,10 @@
 		font-size: 16px;
 		div {
 			padding-top: 5px;
+		}
+		.downLoad {
+			float: right;
+			margin-right: 20px;
 		}
 	}
 	.sub_input {

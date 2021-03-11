@@ -1,7 +1,7 @@
 <template>
 	<div>
 		<super-admin v-if="key == 0" />
-		<other-admin v-if="key == 1 || key == 4" />
+		<other-admin v-if="key == 1 || key == 4 || key == 2" />
 	</div>
 </template>
 <script>

@@ -33,6 +33,7 @@
 				</a-table>
 				<a-divider>直接管理单位</a-divider>
 				<a-tag color="green">同意</a-tag>
+				<div>直接管理单位：{{ tanDatas.management_unit_name }}</div>
 				<div>审核人：{{ tanDatas.management_unit_signer }}</div>
 				<div>审核时间：{{ tanDatas.management_unit_feedback_time }}</div>
 				<div>

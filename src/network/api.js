@@ -748,7 +748,15 @@ export const creditReplaceSchemeCheck = obj => {
 		params: obj,
 	});
 };
-
+// 1-14
+// 检查承担毕业论文（设计）申请附件
+export const assumeThesisCheck = obj => {
+	return axios.request({
+		url: "/download/assume_thesis_check",
+		method: "get",
+		params: obj,
+	});
+};
 // 1-14
 // 下载学分置换方案申请附件
 export const downloadCreditReplaceScheme = obj => {
